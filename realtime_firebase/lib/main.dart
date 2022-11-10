@@ -5,16 +5,21 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:realtime_firebase/user_model.dart';
-
+final List <UserModel> listUser = [];
 void main() async {
-  List <UserModel> listUser = [];
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  DatabaseReference ref = FirebaseDatabase.instance.ref().child('user');
+  var snap;
+  DatabaseReference ref = FirebaseDatabase.instance.ref().child('users/');
   ref.onValue.listen((event) {
-    var snap = event.snapshot;
+    listUser.clear();
+    snap = event.snapshot;
+    Map <String, dynamic> json = Map.from(snap.value);
+    json.forEach((key, value) {
+      listUser.add(UserModel(name: value['name'], job: value['job']));
+    });
+    runApp(const MyApp());
   });
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -49,9 +54,9 @@ class _MyHomePageState extends State<MyHomePage> {
        body: Container(
          color: Colors.green,
          padding: EdgeInsets.all(size.height * 0.02),
-         child: FirebaseAnimatedList(
-           query: FirebaseDatabase.instance.reference().child('user'),
-           itemBuilder: (context, snapshot, animation, index) {
+         child: ListView.builder(
+           itemCount: listUser.length,
+           itemBuilder: (context, index) {
              return Container(
                width: size.width,
                height: size.height * 0.1,
@@ -83,10 +88,10 @@ class _MyHomePageState extends State<MyHomePage> {
                        mainAxisAlignment: MainAxisAlignment.center,
                        crossAxisAlignment: CrossAxisAlignment.start,
                        children: [
-                         Text(snapshot.value., style: TextStyle(fontSize: 18, color: Colors.red),),
+                         Text(listUser[index].name, style: TextStyle(fontSize: 18, color: Colors.red),),
                          Container(
                              margin: EdgeInsets.only(top: 5),
-                             child: Text('Job: ${snapshot.value['job']}',style: TextStyle(fontSize: 16, color: Colors.red)))
+                             child: Text('Job: ${listUser[index].job}',style: TextStyle(fontSize: 16, color: Colors.red)))
                        ],
                      ),
                    ),
