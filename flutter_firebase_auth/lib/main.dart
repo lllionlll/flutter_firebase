@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,8 +45,8 @@ class _MyHomePageState extends State<MyHomePage> {
             } else {
               return Center(
                 child:  ElevatedButton(
-                    onPressed: () {
-                      FirebaseAuth.instance.signOut();
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
                     },
                     child: Text(
                       'SIGN OUT',
@@ -62,15 +63,32 @@ class _MyHomePageState extends State<MyHomePage> {
     TextEditingController email = TextEditingController();
     TextEditingController pass = TextEditingController();
 
-    Future sign() async {
+    Future<UserCredential> signInWithGoogle() async {
+      // Trigger the authentication flow
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth?.accessToken,
+        idToken: googleAuth?.idToken,
+      );
+
+      // Once signed in, return the UserCredential
+      return await FirebaseAuth.instance.signInWithCredential(credential);
+    }
+    Future signIn() async {
       await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email.text.trim(), password: pass.text.trim());
     }
 
-    Future forget() async {
-      FirebaseAuth.instance.sendPasswordResetEmail(
-        email: email.text.trim()
-      );
+    Future signUp() async {
+      // FirebaseAuth.instance.sendPasswordResetEmail(
+      //   email: email.text.trim()
+      // );
+      signInWithGoogle();
     }
 
     return Container(
@@ -111,7 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
             margin: EdgeInsets.only(top: size.width * 0.2),
             child: ElevatedButton(
                 onPressed: () {
-                  sign();
+                  signIn();
                 },
                 child: Text(
                   'SIGN IN',
@@ -122,24 +140,13 @@ class _MyHomePageState extends State<MyHomePage> {
             margin: EdgeInsets.only(top: size.width * 0.1),
             child: ElevatedButton(
                 onPressed: () {
-                  
+                  signUp();
                 },
                 child: Text(
                   'SIGN UP',
                   style: TextStyle(color: Colors.white),
                 )),
-          ),
-          Container(
-            margin: EdgeInsets.only(top: size.width * 0.1),
-            child: ElevatedButton(
-                onPressed: () {
-                  forget();
-                },
-                child: Text(
-                  'FORGOT PASSWORD',
-                  style: TextStyle(color: Colors.white),
-                )),
-          ),
+          )
         ],
       ),
     );
