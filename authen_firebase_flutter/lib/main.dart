@@ -1,6 +1,9 @@
+import 'package:authen_firebase_flutter/screens/addData.dart';
 import 'package:authen_firebase_flutter/screens/home_screen.dart';
 import 'package:authen_firebase_flutter/screens/register_screen.dart';
 import 'package:authen_firebase_flutter/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -11,8 +14,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+  bool? check;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,15 +23,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: StreamBuilder(
-        stream: AuthService().firebaseAuth.authStateChanges(),
-        builder: ((context, snapshot) {
-          if (snapshot.hasData) {
-            return HomeScreen();
-          }
-          return RegisterScreen();
-        }),
-      )
+      home: RegisterScreen()
     );
   }
 }
+

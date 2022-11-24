@@ -1,14 +1,24 @@
+import 'package:authen_firebase_flutter/screens/addData.dart';
 import 'package:authen_firebase_flutter/screens/login_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
 import '../services/auth_service.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
 
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
   TextEditingController confirm = TextEditingController();
+
+  bool loading = false;
+  bool loading2 = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,12 +58,17 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 30,),
-            Container(
+            loading == true
+                ? Container(height: 50, width: 50, padding: EdgeInsets.all(10),child: CircularProgressIndicator(),)
+                :Container(
               height: 50,
               width: double.infinity,
               child: ElevatedButton(
                 child: Text('Submit', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
                 onPressed: () async {
+                  setState(() {
+                    loading = true;
+                  });
                   if (email.text == "" || password == "") {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('All field are required'), backgroundColor: Colors.red,));
                   } else if (password.text != confirm.text) {
@@ -65,6 +80,9 @@ class RegisterScreen extends StatelessWidget {
                       print(result.email);
                     }
                   }
+                  setState(() {
+                    loading = false;
+                  });
                 },
               ),
             ),
@@ -78,6 +96,31 @@ class RegisterScreen extends StatelessWidget {
                         (router) => true
                 );
               },
+            ),
+            SizedBox(height: 20,),
+            loading2? CircularProgressIndicator() : ElevatedButton(
+              onPressed: () async{
+                setState(() {
+                  loading2 = true;
+                });
+                await AuthService().signInWithGoogle();
+                FirebaseFirestore firestore = await FirebaseFirestore.instance;
+                CollectionReference users = firestore.collection('users');
+                String uid = FirebaseAuth.instance.currentUser!.uid;
+                DocumentSnapshot result = await users.doc(uid).get();
+                if (result.data() == null) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                          builder: (context) => AddData()),
+                          (router) => true
+                  );
+                }
+                setState(() {
+                  loading2 = false;
+                });
+
+              },
+              child: Text('Google'),
             )
           ],
         ),
